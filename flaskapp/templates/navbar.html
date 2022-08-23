@@ -1,0 +1,32 @@
+
+
+    <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+      <div class="container">
+        <a class="navbar-brand mr-4" href="/home">Flask Blog</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarToggle">
+          <div class="navbar-nav mr-auto">
+            <a class="nav-item nav-link" href="{{ url_for('main.home') }}">Home</a>
+            <a class="nav-item nav-link" href="{{ url_for('main.about') }}">About</a>
+            {% if current_user.role == 'admin' %}
+            <a class="nav-item nav-link" href="{{ url_for('dashboard.uiDash') }}">Dashboard</a>
+            {% endif %}
+          </div>
+          <!-- Navbar Right Side -->
+          <div class="navbar-nav">
+            {% if current_user.is_authenticated %}
+            {% if current_user.role == 'admin' %}
+            <a class="nav-item nav-link" href="{{ url_for('posts.new_post') }}">New Post</a>
+            {% endif %}
+            <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Account</a>
+            <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Logout</a>
+            {% else %}
+            <a class="nav-item nav-link" href="{{ url_for('users.login') }}">Login</a>
+            <a class="nav-item nav-link" href="{{ url_for('users.register') }}">Register</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
