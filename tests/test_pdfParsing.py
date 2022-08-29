@@ -44,7 +44,7 @@ class BasicTests(unittest.TestCase):
     #### setup and teardown ####
     ############################
 
-    def _test_parsePDFWithCorrectEnding(self):
+    def test_parsePDFWithCorrectEnding(self):
         '''
         test_parsePDFWithCorrectEnding() will check if the DF of the pdf will generate ONE count of the 'ending balance' string data
         '''
@@ -75,7 +75,7 @@ class BasicTests(unittest.TestCase):
                     break
         self.assertEqual(endOfBalanceCount, 1)
 
-    def _test_dateFieldPDF(self):
+    def test_dateFieldPDF(self):
         '''
         test_dateFieteldPDF() will check if the date field in the DF is in the correct format, dd-mm
         '''

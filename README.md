@@ -11,7 +11,9 @@ This flask application allows the user to connect to their bank account and aqui
     - sudo apt update -y && sudo apt upgrade -y
     - sudo apt install python3-pip -y
     - sudo apt install postgresql postgresql-contrib
-    - pip3 install flask, flask_login, flask_sqlalchemy, flask_sqlalchemy, flask_mail, itsdangerous==2.0.1, flask_wtf, email_validator, tabula, pdfplumber, pandas, psycopg2-binary
+    - sudo apt install default-jre -y
+    - sudo apt install default-jdk -y
+    - pip3 install flask, flask_login, flask_sqlalchemy, flask_sqlalchemy, flask_mail, itsdangerous==2.0.1, flask_wtf, email_validator, tabula, pdfplumber, pandas, psycopg2-binary, tabula-py
     
 ## PostgreSQL Configuration
 
