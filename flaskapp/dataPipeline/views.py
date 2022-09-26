@@ -21,8 +21,9 @@ def uploadFile():
             cleanedDF =pdf.addYear(pdf.StrToFloatBalanceAndAmount(pdf.cleanupPDF()))
             if pdf.dataExistsinDb(cleanedDF) == False:
                 pdf.pushToDB(cleanedDF)
+                return '<h1>PDF-file uploaded successfully</h1>'
             else:
                 print("PDF data already exist in DB")
-            return '<h1>PDF-file uploaded successfully, but data already exist</h1>'
+                return '<h1>PDF-file uploaded successfully, but data already exist</h1>'
         else:
             return '<h1> File is NOT a pdf, file was not uploaded</h1>'
