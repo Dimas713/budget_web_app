@@ -1,7 +1,9 @@
 from fileinput import filename
 from flask import Blueprint, render_template, request
+from flask_login import current_user, login_required
+from flaskapp.models import Account
 from .budgetReader import PDFImporter
-from flask import redirect, url_for
+from flask import redirect, url_for, abort
 
 from werkzeug.utils import secure_filename
 from io import BytesIO
@@ -9,13 +11,18 @@ from io import BytesIO
 data = Blueprint('data', __name__)
 
 @data.route('/upload', methods=['POST','GET'])
+@login_required
 def uploadFile():
+    user = Account.query.filter(Account.username == current_user.username).first()
+    if user is None:
+        abort(400)
+
     if request.method == "POST":
         f = request.files['the_file']
         fileN = f.filename
         pdfContent = f.read()        
         file = BytesIO(pdfContent)
-        pdf = PDFImporter(pdfName=fileN,pdf=file, user_id=1)
+        pdf = PDFImporter(pdfName=fileN,pdf=file, user_id= user.id)
 
         if pdf.checkfilePDF():
             cleanedDF =pdf.addYear(pdf.StrToFloatBalanceAndAmount(pdf.cleanupPDF()))
