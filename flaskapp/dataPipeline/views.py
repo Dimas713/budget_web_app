@@ -18,7 +18,9 @@ def uploadFile():
         abort(400)
 
     if request.method == "POST":
-        f = request.files['the_file']
+        f = request.files.get('the_file')
+        if f is None:
+            abort(400, 'Missing file')
         fileN = f.filename
         pdfContent = f.read()        
         file = BytesIO(pdfContent)
