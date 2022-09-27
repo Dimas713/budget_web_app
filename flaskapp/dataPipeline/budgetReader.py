@@ -161,14 +161,17 @@ class PDFImporter():
             print('assignClasification()')
 
     # Check if data already exists in DB
-    def dataExistsinDb(self,df):
+    def dataExistsinDb(self, df: pd.DataFrame)-> bool:
+        ''' Determines if data exist in database based on the start and end date in the data '''
+        
         startDate = df.at[0, 'date']
         endDate = df.at[len(df.index)-1, 'date']
-        firstTransaction = Transaction.query.filter_by(date=startDate, transactionDetail='Beginning Balance').first()
-        lastTransaction = Transaction.query.filter_by(date=endDate, transactionDetail='Ending Balance').first()
+        firstTransaction = Transaction.query.filter_by(date= startDate, transactionDetail= 'Beginning Balance',account_id= self.userID).first()
+        lastTransaction = Transaction.query.filter_by(date= endDate, transactionDetail= 'Ending Balance', account_id= self.userID).first()
+
         if firstTransaction == None and lastTransaction == None:
             return False
-        elif firstTransaction.date == startDate and lastTransaction == endDate:
+        elif firstTransaction.date == startDate and lastTransaction.date == endDate:
             return True
         else:
             False
