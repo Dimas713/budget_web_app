@@ -381,7 +381,7 @@
                             {% endwith %}
                         </div>
                         <form action="/upload" method="post" enctype="multipart/form-data">
-                            <input type="submit" value="Import Report" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                            <input type="submit" value="Import Report" data-toggle="modal" data-target="#loadingModal" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
                             <input type="file" name="file" class="d-none d-sm-inline-block btn btn-sm">
                         </form>
                         <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
@@ -719,7 +719,6 @@
     </div>
     <!-- End of Page Wrapper -->
 
-
     <!-- Scroll to Top Button-->
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
@@ -745,6 +744,19 @@
         </div>
     </div>
 
+    <!-- Loading Model -->
+    <div class="modal" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Processing Data ...</h5>
+                </div>
+                <div class="modal-body">Please wait while we process the uploaded data.</div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Bootstrap core JavaScript-->
     <script src="../static/vendor/jquery/jquery.min.js"></script>
     <script src="../static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
