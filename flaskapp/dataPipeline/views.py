@@ -18,24 +18,23 @@ def uploadFile():
         abort(400)
 
     if request.method == "POST":
-        f = request.files.get('file')
-        if f is None:
+        if request.files.getlist('file') is None:
             return abort(400)
 
-        fileN = f.filename
-        pdfContent = f.read()        
-        file = BytesIO(pdfContent)
-        pdf = PDFImporter(pdfName=fileN,pdf=file, user_id= user.id)
+        for f in request.files.getlist('file'):
+            fileN = f.filename
+            pdfContent = f.read()        
+            file = BytesIO(pdfContent)
+            pdf = PDFImporter(pdfName=fileN,pdf=file, user_id= user.id)
 
-        if pdf.checkfilePDF():
-            cleanedDF =pdf.addYear(pdf.StrToFloatBalanceAndAmount(pdf.cleanupPDF()))
-            if pdf.dataExistsinDb(cleanedDF) == False:
-                pdf.pushToDB(cleanedDF)
-                print('<h1>PDF-file uploaded successfully</h1>')
-                return redirect('/dashboard')
+            if pdf.checkfilePDF():
+                cleanedDF =pdf.addYear(pdf.StrToFloatBalanceAndAmount(pdf.cleanupPDF()))
+                if pdf.dataExistsinDb(cleanedDF) == False:
+                    pdf.pushToDB(cleanedDF)
+                    print('%s uploaded successfully'%fileN)
+                else:
+                    print("%s data already exist in DB"%fileN)    
             else:
-                print("PDF data already exist in DB")
-                return redirect('/dashboard')
-        else:
-            print('<h1> File is NOT a pdf, file was not uploaded</h1>')
-            return redirect('/dashboard')
+                print('%s is NOT a pdf, file was not uploaded'%fileN)
+
+        return redirect('/dashboard')
