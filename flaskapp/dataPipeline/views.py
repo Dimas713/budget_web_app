@@ -28,12 +28,15 @@ def uploadFile():
             pdf = PDFImporter(pdfName=fileN,pdf=file, user_id= user.id)
 
             if pdf.checkfilePDF():
-                cleanedDF =pdf.addYear(pdf.StrToFloatBalanceAndAmount(pdf.cleanupPDF()))
-                if pdf.dataExistsinDb(cleanedDF) == False:
-                    pdf.pushToDB(cleanedDF)
-                    print('%s uploaded successfully'%fileN)
-                else:
-                    print("%s data already exist in DB"%fileN)    
+                try:
+                    cleanedDF =pdf.addYear(pdf.StrToFloatBalanceAndAmount(pdf.cleanupPDF()))
+                    if pdf.dataExistsinDb(cleanedDF) == False:
+                        pdf.pushToDB(cleanedDF)
+                        print('%s uploaded successfully'%fileN)
+                    else:
+                        print("%s data already exist in DB"%fileN)
+                except:
+                    print('Server is unable to parse %s'%fileN)
             else:
                 print('%s is NOT a pdf, file was not uploaded'%fileN)
 
