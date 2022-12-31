@@ -38,11 +38,11 @@ class PDFImporter():
             # Converting 'accountBalance' column value from str to float
             if pd.isnull(df.at[i, 'accountBalance']):
                 df.at[i, 'accountBalance'] = 0.00
-            elif df.at[i, 'accountBalance'][-1] == '-':
-                noCommaString = df.at[i, 'accountBalance'].replace(',','')
+            elif str(df.at[i, 'accountBalance'])[-1] == '-':
+                noCommaString = str(df.at[i, 'accountBalance']).replace(',','')
                 df.at[i, 'accountBalance'] = float(noCommaString[:-1])*(-1)
-            elif df.at[i, 'accountBalance'][-1] != '-':
-                noCommaString = df.at[i, 'accountBalance'].replace(',','')
+            elif str(df.at[i, 'accountBalance'])[-1] != '-':
+                noCommaString = str(df.at[i, 'accountBalance']).replace(',','')
                 df.at[i, 'accountBalance'] = float(noCommaString)
                 
         return df
@@ -60,7 +60,6 @@ class PDFImporter():
                     df.at[i, 'date'] = df.at[i, 'date'] + '-' + yearRange[1]
         return df
         
-
     # Allows the datafframe to keep a table describing bank transactions
     def cleanupPDF(self) -> object:
  
@@ -72,7 +71,6 @@ class PDFImporter():
             if len(page.columns) <= 2:
                 continue
 
-            
             # we are keeping any table that has 4 columns and will keep track of 2 strings that will determine
             #when the ledger starts and when the ledger ends. Any page between and inlcuding these strings appearances
             # will be kept on df list
@@ -98,7 +96,6 @@ class PDFImporter():
                     else:
                         df.append(page)
             
-
             if startOfLedger and len(page.columns) <= 4:
                 if len(page[page[1]=='Ending Balance'].index.tolist()) > 0:
                     row = page[page[1]=='Ending Balance'].index.tolist()[0] # row number
@@ -132,7 +129,6 @@ class PDFImporter():
             df_finish.reset_index(level=None, drop=True, inplace=True, col_level=0, col_fill='')
             rowsWithMissingData = df_finish.index[ df_finish['date'].notna() & df_finish['transactionDetail'].notna() & df_finish['amount'].isna() & df_finish['accountBalance'].isna()  ].tolist()
             
-
         # add user_id column and assign the userID as the value for every row
         df_finish['category_id'] = 1
         df_finish['account_id'] = self.userID
@@ -148,9 +144,9 @@ class PDFImporter():
         print('*'*50)
         print(df_finish)
         '''
+        # check if all columns are NOT na
         return df_finish
             
-
     '''
     checks if there is past data in DB regarding this user,
     if yes then use Naive Bayesian classifier to train past data and use that model to predict the current 
