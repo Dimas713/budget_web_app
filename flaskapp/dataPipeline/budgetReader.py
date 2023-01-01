@@ -105,8 +105,10 @@ class PDFImporter():
         
         # the new pages will be concatinated and return
         df_finish = pd.concat([ i for i in df ], axis=0, sort=False)
-        df_finish.reset_index(level=None, drop=True, inplace=True, col_level=0, col_fill='')
         df_finish.rename({0: 'date', 1: 'transactionDetail', 2: 'amount', 3: 'accountBalance'}, axis=1, inplace=True)
+        df_finish = df_finish[df_finish.date != 'Date']
+        df_finish.reset_index(level=None, drop=True, inplace=True, col_level=0, col_fill='')
+
         '''
         pd.set_option('display.max_rows', None)
         print(df_finish)
