@@ -44,7 +44,7 @@ class PDFImporter():
             elif str(df.at[i, 'accountBalance'])[-1] != '-':
                 noCommaString = str(df.at[i, 'accountBalance']).replace(',','')
                 df.at[i, 'accountBalance'] = float(noCommaString)
-                
+        self.balanceCheck(df)
         return df
 
     # Add the year to the column 'date' in the df
@@ -148,7 +148,19 @@ class PDFImporter():
         '''
         # check if all columns are NOT na
         return df_finish
-            
+
+    # Checks if the amount added or deducted into the balance matches
+    def balanceCheck(self, df):
+        amountList = df['amount'].tolist()
+        balanceList = df['accountBalance'].tolist()
+
+        for index in range(0, len(balanceList)-2):
+            if round(float(balanceList[index]) + float(amountList[index+1]), 2) != float(balanceList[index+1]):
+
+                print(round(float(balanceList[index].replace(',','')) + float(amountList[index+1]), 2))
+                print(float(balanceList[index+1].replace(',','')))
+                print("The values above DONT match")
+                raise Exception("Balance doesnt match added/deducted value")
     '''
     checks if there is past data in DB regarding this user,
     if yes then use Naive Bayesian classifier to train past data and use that model to predict the current 

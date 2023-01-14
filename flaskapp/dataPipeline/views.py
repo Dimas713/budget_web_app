@@ -29,7 +29,7 @@ def uploadFile():
 
             if pdf.checkfilePDF():
                 try:
-                    cleanedDF =pdf.addYear(pdf.StrToFloatBalanceAndAmount(pdf.cleanupPDF()))
+                    cleanedDF = pdf.addYear(pdf.StrToFloatBalanceAndAmount(pdf.cleanupPDF()))
                     if pdf.dataExistsinDb(cleanedDF) == False:
                         pdf.pushToDB(cleanedDF)
                         print('%s uploaded successfully'%fileN)
