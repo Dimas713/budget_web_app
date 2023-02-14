@@ -11,13 +11,14 @@ import pdfplumber
 import pandas as pd
 import re
 
+
 class PDFImporter():
-    def __init__(self, pdfName: str, pdf , user_id: int) -> None:
+    def __init__(self, pdfName: str, pdf, user_id: int) -> None:
         self.pdfName = pdfName
         self.pdf = pdf
         self.userID = user_id
-    
-    # Determines if file is pdf 
+
+    # Determines if file is pdf
     def checkfilePDF(self) -> None:
         if self.pdfName.endswith('.pdf'):
             return True
@@ -29,20 +30,22 @@ class PDFImporter():
             if pd.isnull(df.at[i, 'amount']):
                 df.at[i, 'amount'] = 0.00
             elif df.at[i, 'amount'][-1] == '-':
-                noCommaString = df.at[i, 'amount'].replace(',','')
+                noCommaString = df.at[i, 'amount'].replace(',', '')
                 df.at[i, 'amount'] = float(noCommaString[:-1])*(-1)
             elif df.at[i, 'amount'][-1] != '-':
-                noCommaString = df.at[i, 'amount'].replace(',','')
+                noCommaString = df.at[i, 'amount'].replace(',', '')
                 df.at[i, 'amount'] = float(noCommaString)
 
             # Converting 'accountBalance' column value from str to float
             if pd.isnull(df.at[i, 'accountBalance']):
                 df.at[i, 'accountBalance'] = 0.00
             elif str(df.at[i, 'accountBalance'])[-1] == '-':
-                noCommaString = str(df.at[i, 'accountBalance']).replace(',','')
+                noCommaString = str(
+                    df.at[i, 'accountBalance']).replace(',', '')
                 df.at[i, 'accountBalance'] = float(noCommaString[:-1])*(-1)
             elif str(df.at[i, 'accountBalance'])[-1] != '-':
-                noCommaString = str(df.at[i, 'accountBalance']).replace(',','')
+                noCommaString = str(
+                    df.at[i, 'accountBalance']).replace(',', '')
                 df.at[i, 'accountBalance'] = float(noCommaString)
         self.balanceCheck(df)
         return df
@@ -56,98 +59,95 @@ class PDFImporter():
             else:
                 if df.at[i, 'date'][:2] == '12':
                     df.at[i, 'date'] = df.at[i, 'date'] + '-' + yearRange[0]
-                elif  df.at[i, 'date'][:2] == '01':
+                elif df.at[i, 'date'][:2] == '01':
                     df.at[i, 'date'] = df.at[i, 'date'] + '-' + yearRange[1]
         return df
-        
+
     # Allows the datafframe to keep a table describing bank transactions
     def cleanupPDF(self) -> object:
- 
-        df = [] # a list that will hold the dataframe of each page
-        statementList = tabula.read_pdf(self.pdf, guess=True,pages='all',  multiple_tables=True, pandas_options={'header':None}) # a list containing each page in the file 
-        startOfLedger = False
-        
+        beginningIndex = None
+        endIndex = None
+        transactionDf = pd.DataFrame()
+        statementList = tabula.read_pdf(self.pdf, guess=False, pages='all',  multiple_tables=True,
+                                        pandas_options={'header': None})  # a list containing each page in the file
+
+        # This for loop parses the file and gets the data betwween the first 'Beginning Balance' and the first 'Ending Balance'
         for page in statementList:
-            if len(page.columns) <= 2:
-                continue
+            # Getting the index where the data starts of the data ends
+            df1 = page[page[0].str.contains('Beginning Balance', na=False)]
+            df2 = page[page[0].str.contains('Ending Balance', na=False)]
 
-            # we are keeping any table that has 4 columns and will keep track of 2 strings that will determine
-            #when the ledger starts and when the ledger ends. Any page between and inlcuding these strings appearances
-            # will be kept on df list
-            if page[1].str.contains('Beginning Balance').any() == True:
-                startOfLedger = True
-            
-            # Adjust the page df to have 4 column instead of 3, usally the date and  transactionDetail have combined
-            if len(page.columns) == 4 and startOfLedger:
-                onlyDate = page[0].str.split(' ').str[1].isnull().all()
-                if onlyDate and len(page[page[1]=='Ending Balance'].index.tolist()) == 0:
-                    df.append(page)
-                elif onlyDate == False:
-                    page[2] = page[[1]] 
-                    #page = page[[0,5,1,3]]
-                    
-                    page[1] = page[0].str.split(' ').str[1:].apply(' '.join) # saves the rest on the next column
-                    page[0] = page[0].str.split(' ').str[0] # splits the date and saves it in first column
-                    if len(page[page[1]=='Ending Balance'].index.tolist()) > 0:
-                        row = page[page[1]=='Ending Balance'].index.tolist()[0] # row number
-                        page = page.iloc[:row+1]# removes everything after "Ending Balance"
-                        df.append(page)
-                        break
-                    else:
-                        df.append(page)
-            
-            if startOfLedger and len(page.columns) <= 4:
-                if len(page[page[1]=='Ending Balance'].index.tolist()) > 0:
-                    row = page[page[1]=='Ending Balance'].index.tolist()[0] # row number
-                    page = page.iloc[:row+1]# removes everything after "Ending Balance"
-                    df.append(page)
-                    break
-        
-        # the new pages will be concatinated and return
-        df_finish = pd.concat([ i for i in df ], axis=0, sort=False)
-        df_finish.rename({0: 'date', 1: 'transactionDetail', 2: 'amount', 3: 'accountBalance'}, axis=1, inplace=True)
-        df_finish = df_finish[df_finish.date != 'Date']
-        df_finish.reset_index(level=None, drop=True, inplace=True, col_level=0, col_fill='')
+            # BeginningIndex and endIndex are in the same page and have not been found before this page
+            if beginningIndex == None and endIndex == None and df2.shape[0] > 0 and df1.shape[0] > 0:
+                beginningIndex = df1.index.tolist()[0]
+                transactionDf = pd.concat(
+                    [transactionDf, page.truncate(before=beginningIndex)])
 
-        '''
-        pd.set_option('display.max_rows', None)
-        print(df_finish)
-        '''
-        
-        # Look for column that doesnt have amount or balance and extract that data from the next row,delete the row where the data was extracted
-        rowsWithMissingData = df_finish.index[ df_finish['date'].notna() & df_finish['transactionDetail'].notna() & df_finish['amount'].isna() & df_finish['accountBalance'].isna()  ].tolist()
-        
-        while len(rowsWithMissingData) >0:
-            dateList = df_finish['date'].tolist()
-            if re.fullmatch(r'[0-9]{2}[-][0-9]{2}',dateList[rowsWithMissingData[0]]) is None:
-                df_finish.drop(rowsWithMissingData[0],inplace=True)
-                df_finish.reset_index(level=None, drop=True, inplace=True, col_level=0, col_fill='')
-                rowsWithMissingData = df_finish.index[ df_finish['date'].notna() & df_finish['transactionDetail'].notna() & df_finish['amount'].isna() & df_finish['accountBalance'].isna()  ].tolist()
-                continue
+                endIndex = df2.index.tolist()[0]
+                transactionDf = pd.concat(
+                    [transactionDf, page.truncate(after=endIndex)]).reset_index(drop=True)
+                break
 
-            df_finish.at[rowsWithMissingData[0],'amount'] = df_finish.at[rowsWithMissingData[0]+1,'amount']
-            df_finish.at[rowsWithMissingData[0],'accountBalance'] = df_finish.at[rowsWithMissingData[0]+1,'accountBalance']
-            df_finish.drop(rowsWithMissingData[0]+1,inplace=True)
-            df_finish.reset_index(level=None, drop=True, inplace=True, col_level=0, col_fill='')
-            rowsWithMissingData = df_finish.index[ df_finish['date'].notna() & df_finish['transactionDetail'].notna() & df_finish['amount'].isna() & df_finish['accountBalance'].isna()  ].tolist()
-            
+            # if we find the beginning index for the first time, but havent found the endIndex before or on this iteration
+            if beginningIndex == None and df1.shape[0] > 0 and endIndex == None and df2.shape[0] == 0:
+                beginningIndex = df1.index.tolist()[0]
+                transactionDf = pd.concat(
+                    [transactionDf, page.truncate(before=beginningIndex)])
+
+            # If we have found the beginningIndex before and found the end index for the first time in this iteration
+            if beginningIndex != None and endIndex == None and df2.shape[0] > 0:
+                endIndex = df2.index.tolist()[0]
+                transactionDf = pd.concat(
+                    [transactionDf, page.truncate(after=endIndex)]).reset_index(drop=True)
+                break
+
+            # if we are in a page were no beginningIndex or endindex appears, but in a previous page the beginningIndex was found
+            if beginningIndex != None and df1.shape[0] == 0 and df2.shape[0] == 0 and endIndex == None:
+                transactionDf = pd.concat([transactionDf, page])
+
+        # Clean data by deleteing rows with data not related to transaction
+        na_indices = transactionDf.index[transactionDf[2].isna()].to_list()
+        for i in range(0, len(na_indices)):
+            if pd.isna(transactionDf[0][na_indices[i]]) == False and transactionDf[0][na_indices[i]][0:2].isnumeric():
+                # copy the next rows amount and balance
+                amountValue = transactionDf[1][na_indices[i]+1]
+                balanceValue = transactionDf[2][na_indices[i]+1]
+
+                transactionDf.at[na_indices[i], 1] = amountValue
+                transactionDf.at[na_indices[i], 2] = balanceValue
+
+                transactionDf.drop(index=na_indices[i]+1, inplace=True)
+            elif pd.isna(transactionDf[0][na_indices[i]]) == False and transactionDf[0][na_indices[i]][0:2].isnumeric() == False:
+                # delete the row we are in
+                transactionDf.drop(index=na_indices[i], inplace=True)
+            elif pd.isna(transactionDf[0][na_indices[i]]):
+                # delete the row we are in
+                transactionDf.drop(index=na_indices[i], inplace=True)
+
+        # Droping all rows that contain NA in first column
+        transactionDf.dropna(subset=[0], inplace=True)
+
+        # Delete all rows where there is the substring "Date" in column 0
+        transactionDf = transactionDf[transactionDf[0].str.contains(
+            '|'.join(["Date"])) == False]
+
+        transactionDf.reset_index(inplace=True, drop=True)  # reset index
+
+        # Split the date and description from the first column, and create new column to store description
+        dateValue = transactionDf[0].str[0:5]
+        descValue = transactionDf[0].str[5:]
+        transactionDf[0] = dateValue
+        transactionDf.insert(1, 'transactionDetail', descValue)
+
+        # Rename columns
+        transactionDf.rename(
+            columns={0: 'date', 1: 'amount', 2: 'accountBalance'}, inplace=True)
+
         # add user_id column and assign the userID as the value for every row
-        df_finish['category_id'] = 1
-        df_finish['account_id'] = self.userID
+        transactionDf['category_id'] = 1
+        transactionDf['account_id'] = self.userID
 
-        rowsWithMissingData = df_finish.index[ df_finish['date'].isna() & df_finish['transactionDetail'].notna() & df_finish['amount'].isna() & df_finish['accountBalance'].isna()  ].tolist()
-        # drop anything with na in first , third and fouth column
-        while len(rowsWithMissingData) >0:
-            df_finish.drop(rowsWithMissingData[0],inplace=True)
-            df_finish.reset_index(level=None, drop=True, inplace=True, col_level=0, col_fill='')
-            rowsWithMissingData = df_finish.index[ df_finish['date'].isna() & df_finish['transactionDetail'].notna() & df_finish['amount'].isna() & df_finish['accountBalance'].isna()  ].tolist()
-        '''
-        pd.set_option('display.max_rows', None)
-        print('*'*50)
-        print(df_finish)
-        '''
-        # check if all columns are NOT na
-        return df_finish
+        return transactionDf
 
     # Checks if the amount added or deducted into the balance matches
     def balanceCheck(self, df):
@@ -157,8 +157,9 @@ class PDFImporter():
         for index in range(0, len(balanceList)-2):
             if round(float(balanceList[index]) + float(amountList[index+1]), 2) != float(balanceList[index+1]):
 
-                print(round(float(balanceList[index].replace(',','')) + float(amountList[index+1]), 2))
-                print(float(balanceList[index+1].replace(',','')))
+                print(round(float(balanceList[index].replace(
+                    ',', '')) + float(amountList[index+1]), 2))
+                print(float(balanceList[index+1].replace(',', '')))
                 print("The values above DONT match")
                 raise Exception("Balance doesnt match added/deducted value")
     '''
@@ -167,17 +168,20 @@ class PDFImporter():
     dataframe clasification
     if no data exist then clasification needs to be perfomed manually
     '''
-    def assignClasification(self, object)-> object:
-            print('assignClasification()')
+
+    def assignClasification(self, object) -> object:
+        print('assignClasification()')
 
     # Check if data already exists in DB
-    def dataExistsinDb(self, df: pd.DataFrame)-> bool:
+    def dataExistsinDb(self, df: pd.DataFrame) -> bool:
         ''' Determines if data exist in database based on the start and end date in the data '''
-        
+
         startDate = df.at[0, 'date']
         endDate = df.at[len(df.index)-1, 'date']
-        firstTransaction = Transaction.query.filter_by(date= startDate, transactionDetail= 'Beginning Balance',account_id= self.userID).first()
-        lastTransaction = Transaction.query.filter_by(date= endDate, transactionDetail= 'Ending Balance', account_id= self.userID).first()
+        firstTransaction = Transaction.query.filter_by(
+            date=startDate, transactionDetail='Beginning Balance', account_id=self.userID).first()
+        lastTransaction = Transaction.query.filter_by(
+            date=endDate, transactionDetail='Ending Balance', account_id=self.userID).first()
 
         if firstTransaction == None and lastTransaction == None:
             return False
@@ -206,9 +210,10 @@ class PDFImporter():
         endYear = dateList[1].strip()[-2:]
         return [startYear,  endYear]
 
-    # push dataframe into the DB 
-    def pushToDB(self, df)-> None:
-        df.to_sql(name='transaction', con=db.engine, if_exists='append',index=False)
+    # push dataframe into the DB
+    def pushToDB(self, df) -> None:
+        df.to_sql(name='transaction', con=db.engine,
+                  if_exists='append', index=False)
         print('*'*30)
         print('pushToDB()')
-        print('*'*30) 
+        print('*'*30)
