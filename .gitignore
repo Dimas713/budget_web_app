@@ -1,3 +1,4 @@
 __pycache__
 tests/passedInputs/*
 tests/pdf_input/*
+.vscode/
