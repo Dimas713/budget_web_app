@@ -154,6 +154,7 @@ if len(sys.argv) == 1:
     cat26 = Category(id=26, category="education_expense", description="Income related to higher eduction")
     cat27 = Category(id=27, category="health_expense", description="Expenses related to personal or family health expenses")
     cat28 = Category(id=28, category="internet", description="internet related expenses")
+    cat29 = Category(id=29, category="car_expense", description="Expenses related to vehicle maintenance")
 
 
     db.session.add(cat1)
@@ -184,6 +185,7 @@ if len(sys.argv) == 1:
     db.session.add(cat26)
     db.session.add(cat27)
     db.session.add(cat28)
+    db.session.add(cat29)
     db.session.commit()
 
     user1 = Account(email='user1@gmail.com', 
