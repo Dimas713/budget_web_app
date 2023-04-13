@@ -155,6 +155,9 @@ if len(sys.argv) == 1:
     cat27 = Category(id=27, category="health_expense", description="Expenses related to personal or family health expenses")
     cat28 = Category(id=28, category="internet", description="internet related expenses")
     cat29 = Category(id=29, category="car_expense", description="Expenses related to vehicle maintenance")
+    cat30 = Category(id=30, category="home_expenses", description="expenses releated to the home, ex: furniture, kitchen, floors")
+    cat31 = Category(id=31, category="we_expenses", description="western union expenses,ex: sending $100 to El Salvador")
+    cat32 = Category(id=32, category="irs_expenses", description="expenses related to tax reporting")
 
 
     db.session.add(cat1)
@@ -168,11 +171,6 @@ if len(sys.argv) == 1:
     db.session.add(cat9)
     db.session.add(cat10)
     db.session.add(cat11)
-    db.session.add(cat12)
-    db.session.add(cat13)
-    db.session.add(cat14)
-    db.session.add(cat15)
-    db.session.add(cat16)
     db.session.add(cat17)
     db.session.add(cat18)
     db.session.add(cat19)
